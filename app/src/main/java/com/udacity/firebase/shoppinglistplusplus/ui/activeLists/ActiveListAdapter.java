@@ -14,7 +14,7 @@ import com.udacity.firebase.shoppinglistplusplus.model.ShoppingList;
 /**
  * Created by shinu on 7/22/2017.
  */
-public class ActiveListAdapter extends Firebase.ListAdapter {
+public class ActiveListAdapter extends FirebaseListAdapter<ShoppingList> {
 
 
     public ActiveListAdapter(Activity activity, Class<ShoppingList> modelClass,int modelLayout,Query ref){
