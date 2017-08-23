@@ -1,7 +1,8 @@
 package com.udacity.firebase.shoppinglistplusplus.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.firebase.client.ServerValue;
+
+import com.google.firebase.database.ServerValue;
 import com.udacity.firebase.shoppinglistplusplus.utils.Constants;
 
 import java.util.HashMap;
