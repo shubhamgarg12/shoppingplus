@@ -2,6 +2,7 @@ package com.udacity.firebase.shoppinglistplusplus.ui.activeListDetails;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -9,10 +10,12 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
-import com.firebase.client.DataSnapshot;
-import com.firebase.client.Firebase;
-import com.firebase.client.FirebaseError;
-import com.firebase.client.ValueEventListener;
+
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.udacity.firebase.shoppinglistplusplus.R;
 import com.udacity.firebase.shoppinglistplusplus.model.ShoppingList;
 import com.udacity.firebase.shoppinglistplusplus.model.ShoppingListItem;
@@ -31,7 +34,7 @@ import com.udacity.firebase.shoppinglistplusplus.utils.Constants;
 public class ActiveListDetailsActivity extends BaseActivity {
     private static final String LOG_TAG = ActiveListDetailsActivity.class.getSimpleName();
     private ListView mListView;
-    private Firebase mActiveListRef;
+    private DatabaseReference mActiveListRef;
     private ActiveListItemAdapter mActiveListItemAdapter;
     private ShoppingList mShoppingList;
     private String mListId;
@@ -43,8 +46,8 @@ public class ActiveListDetailsActivity extends BaseActivity {
         setContentView(R.layout.activity_active_list_details);
         Intent intent = this.getIntent();
         mListId= intent.getStringExtra(Constants.KEY_LIST_ID);
-        mActiveListRef = new Firebase(Constants.FIREBASE_URL_ACTIVE_LIST).child(mListId);
-        Firebase listItemsRef = new Firebase(Constants.FIREBASE_URL_SHOPPING_LIST_ITEMS).child(mListId);
+        mActiveListRef = FirebaseDatabase.getInstance().getReferenceFromUrl(Constants.FIREBASE_URL_ACTIVE_LIST).child(mListId);
+        DatabaseReference listItemsRef = FirebaseDatabase.getInstance().getReferenceFromUrl(Constants.FIREBASE_URL_SHOPPING_LIST_ITEMS).child(mListId);
         /**
          * Link layout elements from XML and setup the toolbar
          */
@@ -96,7 +99,7 @@ public class ActiveListDetailsActivity extends BaseActivity {
             }
 
             @Override
-                        public void onCancelled(FirebaseError firebaseError) {
+                        public void onCancelled(DatabaseError firebaseError) {
                 Log.e(LOG_TAG, getString(R.string.log_error_the_read_failed) + firebaseError.getMessage());
             }
                     });

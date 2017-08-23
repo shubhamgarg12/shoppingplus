@@ -6,9 +6,9 @@ package com.udacity.firebase.shoppinglistplusplus.ui.activeListDetails;
 
 import android.app.Dialog;
 import android.os.Bundle;
-
-import com.firebase.client.Firebase;
-import com.firebase.client.ServerValue;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue;
 import com.udacity.firebase.shoppinglistplusplus.R;
 import com.udacity.firebase.shoppinglistplusplus.model.ShoppingList;
 import com.udacity.firebase.shoppinglistplusplus.utils.Constants;
@@ -76,7 +76,7 @@ public class EditListNameDialogFragment extends EditListDialogFragment {
         if(!mInputListName.equals("")) {
             if (mListName != null&&mListId!=null) {
                 if (!mInputListName.equals(mListName)) {
-                    Firebase refShoppingList = new Firebase(Constants.FIREBASE_URL_ACTIVE_LIST);
+                    DatabaseReference refShoppingList = FirebaseDatabase.getInstance().getReferenceFromUrl(Constants.FIREBASE_URL_ACTIVE_LIST);
                     HashMap<String, Object> updatedProps = new HashMap<>();
                     updatedProps.put(Constants.KEY_LIST_NAME, mInputListName);
                     HashMap<String, Object> changedTimesSTamp = new HashMap<>();

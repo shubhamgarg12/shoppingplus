@@ -5,6 +5,7 @@ import android.view.View;
 import android.widget.TextView;
 
 
+import com.firebase.ui.FirebaseListAdapter;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
@@ -14,7 +15,7 @@ import com.udacity.firebase.shoppinglistplusplus.model.ShoppingList;
 /**
  * Created by shinu on 7/22/2017.
  */
-public class ActiveListAdapter extends Firebase.ListAdapter {
+public class ActiveListAdapter extends FirebaseListAdapter<ShoppingList> {
 
 
     public ActiveListAdapter(Activity activity, Class<ShoppingList> modelClass,int modelLayout,Query ref){

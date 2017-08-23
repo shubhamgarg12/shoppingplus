@@ -3,9 +3,10 @@ package com.udacity.firebase.shoppinglistplusplus.ui.activeListDetails;
 import android.app.Dialog;
 import android.os.Bundle;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.firebase.client.Firebase;
-import com.firebase.client.ServerValue;
+
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue;
 import com.udacity.firebase.shoppinglistplusplus.R;
 import com.udacity.firebase.shoppinglistplusplus.model.ShoppingList;
 import com.udacity.firebase.shoppinglistplusplus.model.ShoppingListItem;
@@ -62,14 +63,14 @@ public class AddListItemDialogFragment extends EditListDialogFragment {
          */
         if (!mItemName.equals("")) {
 
-            Firebase firebaseRef = new Firebase(Constants.FIREBASE_URL);
-            Firebase itemsRef = new Firebase(Constants.FIREBASE_URL_SHOPPING_LIST_ITEMS).child(mListId);
+            DatabaseReference firebaseRef = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_URL);
+            DatabaseReference itemsRef = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_URL_SHOPPING_LIST_ITEMS).child(mListId);
 
                             /* Make a map for the item you are adding */
             HashMap<String, Object> updatedItemToAddMap = new HashMap<String, Object>();
 
                      /* Save push() to maintain same random Id */
-            Firebase newRef = itemsRef.push();
+            DatabaseReference newRef = itemsRef.push();
             String itemId = newRef.getKey();
 
                       /* Make a POJO for the item and immediately turn it into a HashMap */

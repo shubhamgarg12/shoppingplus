@@ -6,12 +6,15 @@ package com.udacity.firebase.shoppinglistplusplus.ui.activeListDetails;
 import android.app.Dialog;
 import android.os.Bundle;
 
-import com.firebase.client.Firebase;
-import com.firebase.client.ServerValue;
+
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue;
 import com.udacity.firebase.shoppinglistplusplus.R;
 import com.udacity.firebase.shoppinglistplusplus.model.ShoppingList;
 import com.udacity.firebase.shoppinglistplusplus.utils.Constants;
 
+import java.util.Date;
 import java.util.HashMap;
 
 
@@ -73,7 +76,7 @@ public class EditListItemNameDialogFragment extends EditListDialogFragment {
          * previous name.
          */
         if (!nameInput.equals("") && !nameInput.equals(mItemName)) {
-            Firebase firebaseRef = new Firebase(Constants.FIREBASE_URL);
+            DatabaseReference firebaseRef = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_URL);
 
             /* Make a map for the item you are editing the name of */
             HashMap<String, Object> updatedItemToAddMap = new HashMap<String, Object>();
