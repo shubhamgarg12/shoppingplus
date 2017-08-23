@@ -3,10 +3,7 @@ package com.udacity.firebase.shoppinglistplusplus.ui.login;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.media.MediaPlayer;
-import android.os.AsyncTask;
 import android.os.Bundle;
-
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -18,23 +15,17 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-import com.google.android.gms.auth.GoogleAuthException;
-import com.google.android.gms.auth.GoogleAuthUtil;
-import com.google.android.gms.auth.UserRecoverableAuthException;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes;
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.SignInButton;
-import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -48,8 +39,6 @@ import com.udacity.firebase.shoppinglistplusplus.ui.BaseActivity;
 import com.udacity.firebase.shoppinglistplusplus.ui.MainActivity;
 import com.udacity.firebase.shoppinglistplusplus.utils.Constants;
 import com.udacity.firebase.shoppinglistplusplus.utils.Utils;
-
-import java.io.IOException;
 import java.util.HashMap;
 
 /**
@@ -78,7 +67,7 @@ public class LoginActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        /**
+        /*
          * Link layout elements from XML and setup progress dialog
          */
         initializeScreen();
@@ -86,11 +75,11 @@ public class LoginActivity extends BaseActivity {
         //create firebase reference
 
         mFirebaseRef = FirebaseDatabase.getInstance().getReference();
+        mAuth = FirebaseAuth.getInstance();
 
 
 
-
-        /**
+        /*
          * Call signInPassword() when user taps "Done" keyboard action
          */
         mEditTextPasswordInput.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -185,10 +174,11 @@ public class LoginActivity extends BaseActivity {
                         if(task.isSuccessful()){
                             mAuthProgressDialog.dismiss();
                             Log.i(LOG_TAG, " " + getString(R.string.log_message_auth_successful));
-                             String provider="Default";
+                            String provider="Default";
                             SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                             SharedPreferences.Editor spe = sp.edit();
                             if (task.getResult().getUser().getProviderId().equals(Constants.PASSWORD_PROVIDER)) {
+
                                 String unEmail= task.getResult().getUser().getEmail().toString().toLowerCase();
                                 mEncodedEmail = Utils.encodeEmail(unEmail);
                                 provider = "password";
@@ -201,25 +191,25 @@ public class LoginActivity extends BaseActivity {
 
 
                                     SharedPreferences gp = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                                  SharedPreferences.Editor gpe = sp.edit();
+                                    SharedPreferences.Editor gpe = sp.edit();
                                     provider="google";
-                                  String unprocessedEmail;
-                                  if (mGoogleApiClient.isConnected()) {
-                                          unprocessedEmail = mGoogleAccount.getEmail().toLowerCase();
-                                          spe.putString(Constants.KEY_GOOGLE_EMAIL, unprocessedEmail).apply();
-                                      } else {
+                                    String unprocessedEmail;
+                                    if (mGoogleApiClient.isConnected()) {
+                                        unprocessedEmail = mGoogleAccount.getEmail().toLowerCase();
+                                        spe.putString(Constants.KEY_GOOGLE_EMAIL, unprocessedEmail).apply();
+                                    } else {
 
-                                       /**
+                                        /**
                                          * Otherwise get email from sharedPreferences, use null as default value
                                          * (this mean that user resumes his session)
                                          */
-                                               unprocessedEmail = gp.getString(Constants.KEY_GOOGLE_EMAIL, null);
-                                      }
-                                  /**
-                                    * Encode user email replacing "." with "," to be able to use it
-                                    * as a Firebase db key
-                                    */
-                                          mEncodedEmail = Utils.encodeEmail(unprocessedEmail);
+                                        unprocessedEmail = gp.getString(Constants.KEY_GOOGLE_EMAIL, null);
+                                    }
+                                    /**
+                                     * Encode user email replacing "." with "," to be able to use it
+                                     * as a Firebase db key
+                                     */
+                                    mEncodedEmail = Utils.encodeEmail(unprocessedEmail);
 
                                     final String userName = mGoogleAccount.getDisplayName();
 
@@ -254,11 +244,11 @@ public class LoginActivity extends BaseActivity {
 
 
                        /* Go to main activity */
-                                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                startActivity(intent);
-                                finish();
-                            }else{
+                            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            startActivity(intent);
+                            finish();
+                        }else{
                             mAuthProgressDialog.dismiss();
 
                             Log.w(LOG_TAG,"signInWithEmail:failure", task.getException());
@@ -272,7 +262,7 @@ public class LoginActivity extends BaseActivity {
                     }
                 });
     }
-            /**
+            /*
              * Use utility method to check the network connection state
              * Show "No network connection" if there is no connection
              * Show Firebase specific error message otherwise
@@ -294,7 +284,7 @@ public class LoginActivity extends BaseActivity {
         }
     }*/
 
-    /**
+    /*
      * Helper method that makes sure a user is created if the user
      * logs in with Firebase's email/password provider.
      * @param authData AuthData object returned from onAuthenticated
@@ -302,7 +292,7 @@ public class LoginActivity extends BaseActivity {
     //private void setAuthenticatedUserPasswordProvider(AuthData authData) {
     //}
 
-    /**
+    /*
      * Helper method that makes sure a user is created if the user
      * logs in with Firebase's Google login provider.
      * @param authData AuthData object returned from onAuthenticated
@@ -320,7 +310,7 @@ public class LoginActivity extends BaseActivity {
 
 
 
-    /**
+    /*
      * GOOGLE SIGN IN CODE
      *
      * This code is mostly boiler plate from
@@ -365,7 +355,7 @@ public class LoginActivity extends BaseActivity {
 
     @Override
     public void onConnectionFailed(ConnectionResult result) {
-        /**
+        /*
          * An unresolvable error has occurred and Google APIs (including Sign-In) will not
          * be available.
          */
@@ -412,7 +402,7 @@ public class LoginActivity extends BaseActivity {
      */
     private void getGoogleOAuthTokenAndLogin(GoogleSignInAccount account) {
         /* Get OAuth token in Background */
-       // howProgressDialog();
+        // howProgressDialog();
         // [END_EXCLUDE]
 
         AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);
@@ -423,18 +413,18 @@ public class LoginActivity extends BaseActivity {
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(LOG_TAG, "signInWithCredential:success");
-                           // FirebaseUser user = mAuth.getCurrentUser();
+                            // FirebaseUser user = mAuth.getCurrentUser();
                             //updateUI(user);
                         } else {
                             // If sign in fails, display a message to the user.
-                           // Log.w(TAG, "signInWithCredential:failure", task.getException());
+                            // Log.w(TAG, "signInWithCredential:failure", task.getException());
                             Toast.makeText(LoginActivity.this, "Authentication failed.",
                                     Toast.LENGTH_SHORT).show();
                             //updateUI(null);
                         }
 
                         // [START_EXCLUDE]
-                       // hideProgressDialog();
+                        // hideProgressDialog();
                         // [END_EXCLUDE]
                     }
                 });
