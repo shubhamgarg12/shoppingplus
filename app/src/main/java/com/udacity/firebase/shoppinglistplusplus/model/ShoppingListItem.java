@@ -20,13 +20,13 @@ package com.udacity.firebase.shoppinglistplusplus.model;
  +     *
  +     * @param itemName
  +     */
-            public ShoppingListItem(String itemName) {
+            public ShoppingListItem(String itemName,String owner) {
                 this.itemName = itemName;
                 /**
  +         * This is a default value until we can differentiate users.
  +         * Which will be soon, I promise.
  +         */
-                this.owner = "Anonymous Owner";
+                this.owner = owner;
             }
 
             public String getItemName() { return itemName; }

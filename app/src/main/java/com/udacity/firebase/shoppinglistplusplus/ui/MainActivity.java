@@ -3,20 +3,29 @@ package com.udacity.firebase.shoppinglistplusplus.ui;
 import android.app.DialogFragment;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
+import android.support.v4.animation.ValueAnimatorCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.udacity.firebase.shoppinglistplusplus.R;
+import com.udacity.firebase.shoppinglistplusplus.model.User;
 import com.udacity.firebase.shoppinglistplusplus.ui.activeLists.AddListDialogFragment;
 import com.udacity.firebase.shoppinglistplusplus.ui.activeLists.ShoppingListsFragment;
 import com.udacity.firebase.shoppinglistplusplus.ui.meals.AddMealDialogFragment;
 import com.udacity.firebase.shoppinglistplusplus.ui.meals.MealsFragment;
+import com.udacity.firebase.shoppinglistplusplus.utils.Constants;
 
 /**
  * Represents the home screen of the app which
@@ -24,16 +33,39 @@ import com.udacity.firebase.shoppinglistplusplus.ui.meals.MealsFragment;
  */
 public class MainActivity extends BaseActivity {
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
+    private ValueEventListener mUserEventListener;
+    private DatabaseReference mUserRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mUserRef = FirebaseDatabase.getInstance().getReferenceFromUrl(Constants.FIREBASE_LOCATION_USERS).child(mEncodedEmail);
         /**
          * Link layout elements from XML and setup the toolbar
          */
         initializeScreen();
+
+        mUserEventListener = mUserRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                User user =  dataSnapshot.getValue(User.class);
+                if (user != null) {
+                               /* Assumes that the first word in the user's name is the user's first name. */
+                                      String firstName = user.getName().split("\\s+")[0];
+                               String title = firstName + "'s Lists";
+                               setTitle(title);
+                           }
+                }
+
+
+            @Override
+            public void onCancelled(DatabaseError databaseError){
+            Log.e(LOG_TAG, getString(R.string.log_error_the_read_failed) + databaseError.getMessage());
+        }
+            });
     }
 
 
@@ -63,7 +95,9 @@ public class MainActivity extends BaseActivity {
 
     @Override
     public void onDestroy() {
+
         super.onDestroy();
+        mUserRef.removeEventListener(mUserEventListener);
     }
 
     /**
@@ -91,7 +125,7 @@ public class MainActivity extends BaseActivity {
      */
     public void showAddListDialog(View view) {
         /* Create an instance of the dialog fragment and show it */
-        DialogFragment dialog = AddListDialogFragment.newInstance();
+        DialogFragment dialog = AddListDialogFragment.newInstance(mEncodedEmail);
         dialog.show(MainActivity.this.getFragmentManager(), "AddListDialogFragment");
     }
 

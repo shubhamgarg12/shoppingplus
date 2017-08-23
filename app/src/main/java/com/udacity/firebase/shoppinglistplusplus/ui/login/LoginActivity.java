@@ -2,10 +2,12 @@ package com.udacity.firebase.shoppinglistplusplus.ui.login;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.os.Bundle;
 
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -29,16 +31,26 @@ import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue;
+import com.google.firebase.database.ValueEventListener;
 import com.udacity.firebase.shoppinglistplusplus.R;
+import com.udacity.firebase.shoppinglistplusplus.model.User;
 import com.udacity.firebase.shoppinglistplusplus.ui.BaseActivity;
 import com.udacity.firebase.shoppinglistplusplus.ui.MainActivity;
 import com.udacity.firebase.shoppinglistplusplus.utils.Constants;
+import com.udacity.firebase.shoppinglistplusplus.utils.Utils;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 /**
  * Represents Sign in screen and functionality of the app
@@ -173,6 +185,74 @@ public class LoginActivity extends BaseActivity {
                         if(task.isSuccessful()){
                             mAuthProgressDialog.dismiss();
                             Log.i(LOG_TAG, " " + getString(R.string.log_message_auth_successful));
+                             String provider="Default";
+                            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                            SharedPreferences.Editor spe = sp.edit();
+                            if (task.getResult().getUser().getProviderId().equals(Constants.PASSWORD_PROVIDER)) {
+                                String unEmail= task.getResult().getUser().getEmail().toString().toLowerCase();
+                                mEncodedEmail = Utils.encodeEmail(unEmail);
+                                provider = "password";
+
+                            } else
+                            /**
+                             * If user has logged in with Password provider
+                             */
+                                if (task.getResult().getAdditionalUserInfo().getProviderId().equals(Constants.GOOGLE_PROVIDER)) {
+
+
+                                    SharedPreferences gp = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                                  SharedPreferences.Editor gpe = sp.edit();
+                                    provider="google";
+                                  String unprocessedEmail;
+                                  if (mGoogleApiClient.isConnected()) {
+                                          unprocessedEmail = mGoogleAccount.getEmail().toLowerCase();
+                                          spe.putString(Constants.KEY_GOOGLE_EMAIL, unprocessedEmail).apply();
+                                      } else {
+
+                                       /**
+                                         * Otherwise get email from sharedPreferences, use null as default value
+                                         * (this mean that user resumes his session)
+                                         */
+                                               unprocessedEmail = gp.getString(Constants.KEY_GOOGLE_EMAIL, null);
+                                      }
+                                  /**
+                                    * Encode user email replacing "." with "," to be able to use it
+                                    * as a Firebase db key
+                                    */
+                                          mEncodedEmail = Utils.encodeEmail(unprocessedEmail);
+
+                                    final String userName = mGoogleAccount.getDisplayName();
+
+                                                /* If no user exists, make a user */
+                                    final DatabaseReference userLocation = FirebaseDatabase.getInstance().getReferenceFromUrl(Constants.FIREBASE_URL_USERS).child(mEncodedEmail);
+                                    userLocation.addListenerForSingleValueEvent(new ValueEventListener() {
+                                        @Override
+                                        public void onDataChange(DataSnapshot dataSnapshot) {
+                                                   /* If nothing is there ...*/
+                                            if (dataSnapshot.getValue() == null) {
+                                                HashMap<String, Object> timestampJoined = new HashMap<>();
+                                                timestampJoined.put(Constants.FIREBASE_PROPERTY_TIMESTAMP, ServerValue.TIMESTAMP);
+
+                                                User newUser = new User(userName, mEncodedEmail, timestampJoined);
+                                                userLocation.setValue(newUser);
+                                            }
+                                        }
+
+                                        @Override
+                                        public void onCancelled(DatabaseError firebaseError) {
+                                            Log.d(LOG_TAG, getString(R.string.log_error_occurred) + firebaseError.getMessage());
+                                        }
+                                    });
+
+                                } else {
+                                    Log.e(LOG_TAG, getString(R.string.log_error_invalid_provider) + task.getResult().getUser().getProviderId());
+                                }
+
+                            spe.putString(Constants.KEY_PROVIDER,provider).apply();
+                            spe.putString(Constants.KEY_ENCODED_EMAIL, mEncodedEmail).apply();
+
+
+
                        /* Go to main activity */
                                 Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -239,12 +319,6 @@ public class LoginActivity extends BaseActivity {
     }
 
 
-    /**
-     * Signs you into ShoppingList++ using the Google Login Provider
-     * @param token A Google OAuth access token returned from Google
-     */
-    private void loginWithGoogle(String token) {
-    }
 
     /**
      * GOOGLE SIGN IN CODE
@@ -320,7 +394,7 @@ public class LoginActivity extends BaseActivity {
         if (result.isSuccess()) {
             /* Signed in successfully, get the OAuth token */
             mGoogleAccount = result.getSignInAccount();
-            getGoogleOAuthTokenAndLogin();
+            getGoogleOAuthTokenAndLogin(mGoogleAccount);
 
 
         } else {
@@ -336,53 +410,33 @@ public class LoginActivity extends BaseActivity {
     /**
      * Gets the GoogleAuthToken and logs in.
      */
-    private void getGoogleOAuthTokenAndLogin() {
+    private void getGoogleOAuthTokenAndLogin(GoogleSignInAccount account) {
         /* Get OAuth token in Background */
-        AsyncTask<Void, Void, String> task = new AsyncTask<Void, Void, String>() {
-            String mErrorMessage = null;
+       // howProgressDialog();
+        // [END_EXCLUDE]
 
-            @Override
-            protected String doInBackground(Void... params) {
-                String token = null;
+        AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);
+        mAuth.signInWithCredential(credential)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            // Sign in success, update UI with the signed-in user's information
+                            Log.d(LOG_TAG, "signInWithCredential:success");
+                           // FirebaseUser user = mAuth.getCurrentUser();
+                            //updateUI(user);
+                        } else {
+                            // If sign in fails, display a message to the user.
+                           // Log.w(TAG, "signInWithCredential:failure", task.getException());
+                            Toast.makeText(LoginActivity.this, "Authentication failed.",
+                                    Toast.LENGTH_SHORT).show();
+                            //updateUI(null);
+                        }
 
-                try {
-                    String scope = String.format(getString(R.string.oauth2_format), new Scope(Scopes.PROFILE)) + " email";
-
-                    token = GoogleAuthUtil.getToken(LoginActivity.this, mGoogleAccount.getEmail(), scope);
-                } catch (IOException transientEx) {
-                    /* Network or server error */
-                    Log.e(LOG_TAG, getString(R.string.google_error_auth_with_google) + transientEx);
-                    mErrorMessage = getString(R.string.google_error_network_error) + transientEx.getMessage();
-                } catch (UserRecoverableAuthException e) {
-                    Log.w(LOG_TAG, getString(R.string.google_error_recoverable_oauth_error) + e.toString());
-
-                    /* We probably need to ask for permissions, so start the intent if there is none pending */
-                    if (!mGoogleIntentInProgress) {
-                        mGoogleIntentInProgress = true;
-                        Intent recover = e.getIntent();
-                        startActivityForResult(recover, RC_GOOGLE_LOGIN);
+                        // [START_EXCLUDE]
+                       // hideProgressDialog();
+                        // [END_EXCLUDE]
                     }
-                } catch (GoogleAuthException authEx) {
-                    /* The call is not ever expected to succeed assuming you have already verified that
-                     * Google Play services is installed. */
-                    Log.e(LOG_TAG, " " + authEx.getMessage(), authEx);
-                    mErrorMessage =  getString(R.string.google_error_auth_with_google) + authEx.getMessage();
-                }
-                return token;
-            }
-
-            @Override
-            protected void onPostExecute(String token) {
-                mAuthProgressDialog.dismiss();
-                if (token != null) {
-                    /* Successfully got OAuth token, now login with Google */
-                    loginWithGoogle(token);
-                } else if (mErrorMessage != null) {
-                    showErrorToast(mErrorMessage);
-                }
-            }
-        };
-
-        task.execute();
+                });
     }
 }
