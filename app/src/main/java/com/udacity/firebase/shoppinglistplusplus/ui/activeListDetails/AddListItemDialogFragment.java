@@ -2,8 +2,6 @@ package com.udacity.firebase.shoppinglistplusplus.ui.activeListDetails;
 
 import android.app.Dialog;
 import android.os.Bundle;
-
-
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ServerValue;
@@ -11,6 +9,8 @@ import com.udacity.firebase.shoppinglistplusplus.R;
 import com.udacity.firebase.shoppinglistplusplus.model.ShoppingList;
 import com.udacity.firebase.shoppinglistplusplus.model.ShoppingListItem;
 import com.udacity.firebase.shoppinglistplusplus.utils.Constants;
+
+import org.codehaus.jackson.map.ObjectMapper;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -61,6 +61,8 @@ public class AddListItemDialogFragment extends EditListDialogFragment {
         /**
          * Adds list item if the input name is not empty
          */
+
+
         if (!mItemName.equals("")) {
 
             DatabaseReference firebaseRef = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_URL);

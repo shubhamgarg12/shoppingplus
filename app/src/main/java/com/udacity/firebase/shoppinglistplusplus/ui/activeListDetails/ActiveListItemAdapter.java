@@ -8,7 +8,8 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 
-import com.firebase.ui.FirebaseListAdapter;
+import com.firebase.ui.*;
+import com.firebase.ui.database.FirebaseListAdapter;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
@@ -27,6 +28,7 @@ public class ActiveListItemAdapter extends FirebaseListAdapter<ShoppingListItem>
 
     private ShoppingList mShoppingList;
     private String mListId;
+    private Activity mActivity;
 
 
     public ActiveListItemAdapter(Activity activity, Class<ShoppingListItem> modelClass, int modelLayout, Query ref, String listId) {
@@ -58,7 +60,7 @@ public class ActiveListItemAdapter extends FirebaseListAdapter<ShoppingListItem>
                                 removeItem(itemToRemoveId);
                                 dialog.dismiss();
                             }
-                        }),
+                        })
                         .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
                                 /* Dismiss the dialog */
