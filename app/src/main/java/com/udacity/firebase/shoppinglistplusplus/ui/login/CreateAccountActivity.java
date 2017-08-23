@@ -152,7 +152,7 @@ public class CreateAccountActivity extends BaseActivity {
                   /* If there is no user, make one */
                 if (dataSnapshot.getValue() == null) {
                        /* Set raw version of date to the ServerValue.TIMESTAMP value and save into dateCreatedMap */
-                    HashMap<String, Object> timestampJoined = new HashMap<>();
+                                     HashMap<String, Object> timestampJoined = new HashMap<>();
                     timestampJoined.put(Constants.FIREBASE_PROPERTY_TIMESTAMP, ServerValue.TIMESTAMP);
 
                     User newUser = new User(mName, mEmail, timestampJoined);

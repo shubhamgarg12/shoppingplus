@@ -1,9 +1,11 @@
 package com.udacity.firebase.shoppinglistplusplus.ui;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -13,7 +15,12 @@ import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.udacity.firebase.shoppinglistplusplus.R;
+import com.udacity.firebase.shoppinglistplusplus.ui.login.CreateAccountActivity;
+import com.udacity.firebase.shoppinglistplusplus.ui.login.LoginActivity;
 import com.udacity.firebase.shoppinglistplusplus.utils.Constants;
 
 /**
@@ -26,6 +33,8 @@ public abstract class BaseActivity extends AppCompatActivity implements
 
     protected GoogleApiClient mGoogleApiClient;
     protected  String mProvider,mEncodedEmail;
+    protected FirebaseAuth mAuthListener;
+    protected DatabaseReference mFirebaseRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,10 +58,30 @@ public abstract class BaseActivity extends AppCompatActivity implements
         /**
          +         * Getting mProvider and mEncodedEmail from SharedPreferences
          +         */
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(BaseActivity.this);
+       final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(BaseActivity.this);
 /* Get mEncodedEmail and mProvider from SharedPreferences, use null as default value */
         mEncodedEmail = sp.getString(Constants.KEY_ENCODED_EMAIL, null);
         mProvider = sp.getString(Constants.KEY_PROVIDER, null);
+
+        if (!((this instanceof LoginActivity) || (this instanceof CreateAccountActivity))) {
+            mFirebaseRef = FirebaseDatabase.getInstance().getReference();
+            mAuthListener = FirebaseAuth.getInstance();
+            mAuthListener.addAuthStateListener(new FirebaseAuth.AuthStateListener() {
+                @Override
+                public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                    if (firebaseAuth == null) {
+                                 /* Clear out shared preferences */
+                        SharedPreferences.Editor spe = sp.edit();
+                        spe.putString(Constants.KEY_ENCODED_EMAIL, null);
+                        spe.putString(Constants.KEY_PROVIDER, null);
+
+                        takeUserToLoginScreenOnUnAuth();
+                    }
+                }
+            });
+
+
+    }
 
 
     }
@@ -63,6 +92,7 @@ public abstract class BaseActivity extends AppCompatActivity implements
     @Override
     public void onDestroy() {
         super.onDestroy();
+
     }
 
     @Override
@@ -85,7 +115,20 @@ public abstract class BaseActivity extends AppCompatActivity implements
             super.onBackPressed();
             return true;
         }
+        if(id == R.id.action_logout){
+
+            FirebaseAuth.getInstance().signOut();
+
+        }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void takeUserToLoginScreenOnUnAuth() {
+      /* Move user to LoginActivity, and remove the backstack */
+        Intent intent = new Intent(BaseActivity.this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 
     protected void initializeBackground(LinearLayout linearLayout) {
