@@ -109,7 +109,7 @@ public class AddListDialogFragment extends DialogFragment {
 
         if(!listNameEntered.equals("")) {
 
-            DatabaseReference listRef = FirebaseDatabase.getInstance().getReference(Constants.FIREBASE_URL_ACTIVE_LISTS);
+            DatabaseReference listRef = FirebaseDatabase.getInstance().getReference().child(Constants.FIREBASE_LOCATION_ACTIVE_LISTS);
 
 
             DatabaseReference newListRef = listRef.push();

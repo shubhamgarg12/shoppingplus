@@ -89,6 +89,8 @@ public class ShoppingListsFragment extends Fragment {
                     String listId = mActiveListAdapter.getRef(position).getKey();
                     intent.putExtra(Constants.KEY_LIST_ID,listId);
                     startActivity(intent);
+                    //finish();
+
                 }
 
             }

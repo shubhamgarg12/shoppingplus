@@ -1,7 +1,9 @@
 package com.udacity.firebase.shoppinglistplusplus.ui;
 
 import android.app.DialogFragment;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.design.widget.TabLayout;
 import android.support.v4.animation.ValueAnimatorCompat;
 import android.support.v4.app.Fragment;
@@ -14,6 +16,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -33,39 +37,25 @@ import com.udacity.firebase.shoppinglistplusplus.utils.Constants;
  */
 public class MainActivity extends BaseActivity {
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
-    private ValueEventListener mUserEventListener;
-    private DatabaseReference mUserRef;
+
+    private FirebaseUser user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        mUserRef = FirebaseDatabase.getInstance().getReferenceFromUrl(Constants.FIREBASE_LOCATION_USERS).child(mEncodedEmail);
+        user = FirebaseAuth.getInstance().getCurrentUser();
+   //     mUserRef = FirebaseDatabase.getInstance().getReferenceFromUrl(Constants.FIREBASE_LOCATION_USERS);
         /**
          * Link layout elements from XML and setup the toolbar
          */
         initializeScreen();
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
 
-        mUserEventListener = mUserRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-
-                User user =  dataSnapshot.getValue(User.class);
-                if (user != null) {
-                               /* Assumes that the first word in the user's name is the user's first name. */
-                                      String firstName = user.getName().split("\\s+")[0];
+        String firstName = sp.getString(Constants.UserName,"");
                                String title = firstName + "'s Lists";
                                setTitle(title);
-                           }
-                }
 
-
-            @Override
-            public void onCancelled(DatabaseError databaseError){
-            Log.e(LOG_TAG, getString(R.string.log_error_the_read_failed) + databaseError.getMessage());
-        }
-            });
     }
 
 
@@ -97,7 +87,7 @@ public class MainActivity extends BaseActivity {
     public void onDestroy() {
 
         super.onDestroy();
-        mUserRef.removeEventListener(mUserEventListener);
+
     }
 
     /**
@@ -137,6 +127,8 @@ public class MainActivity extends BaseActivity {
         DialogFragment dialog = AddMealDialogFragment.newInstance();
         dialog.show(MainActivity.this.getFragmentManager(), "AddMealDialogFragment");
     }
+
+
 
     /**
      * SectionPagerAdapter class that extends FragmentStatePagerAdapter to save fragments state

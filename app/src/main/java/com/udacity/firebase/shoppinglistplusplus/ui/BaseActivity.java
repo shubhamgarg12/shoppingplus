@@ -11,10 +11,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.LinearLayout;
 
+import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -22,6 +25,8 @@ import com.udacity.firebase.shoppinglistplusplus.R;
 import com.udacity.firebase.shoppinglistplusplus.ui.login.CreateAccountActivity;
 import com.udacity.firebase.shoppinglistplusplus.ui.login.LoginActivity;
 import com.udacity.firebase.shoppinglistplusplus.utils.Constants;
+
+import static android.os.Build.VERSION_CODES.M;
 
 /**
  * BaseActivity class is used as a base class for all activities in the app
@@ -32,7 +37,7 @@ public abstract class BaseActivity extends AppCompatActivity implements
         GoogleApiClient.OnConnectionFailedListener {
 
     protected GoogleApiClient mGoogleApiClient;
-    protected  String mProvider,mEncodedEmail;
+    protected  String mProvider,mEncodedEmail,mUserName;
     protected FirebaseAuth mAuthListener;
     protected DatabaseReference mFirebaseRef;
 
@@ -62,27 +67,7 @@ public abstract class BaseActivity extends AppCompatActivity implements
 /* Get mEncodedEmail and mProvider from SharedPreferences, use null as default value */
         mEncodedEmail = sp.getString(Constants.KEY_ENCODED_EMAIL, null);
         mProvider = sp.getString(Constants.KEY_PROVIDER, null);
-
-        if (!((this instanceof LoginActivity) || (this instanceof CreateAccountActivity))) {
-            mFirebaseRef = FirebaseDatabase.getInstance().getReference();
-            mAuthListener = FirebaseAuth.getInstance();
-            mAuthListener.addAuthStateListener(new FirebaseAuth.AuthStateListener() {
-                @Override
-                public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                    if (firebaseAuth == null) {
-                                 /* Clear out shared preferences */
-                        SharedPreferences.Editor spe = sp.edit();
-                        spe.putString(Constants.KEY_ENCODED_EMAIL, null);
-                        spe.putString(Constants.KEY_PROVIDER, null);
-
-                        takeUserToLoginScreenOnUnAuth();
-                    }
-                }
-            });
-
-
-    }
-
+        mUserName = sp.getString(Constants.UserName,null);
 
     }
 
@@ -117,8 +102,25 @@ public abstract class BaseActivity extends AppCompatActivity implements
         }
         if(id == R.id.action_logout){
 
-            FirebaseAuth.getInstance().signOut();
 
+
+            AuthUI.getInstance()
+                    .signOut(this).addOnCompleteListener(new OnCompleteListener<Void>(){
+
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+
+                    mFirebaseRef = FirebaseDatabase.getInstance().getReference();
+                    mAuthListener = FirebaseAuth.getInstance();
+                    SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(BaseActivity.this);
+                    SharedPreferences.Editor spe = sp.edit();
+                    spe.putString(Constants.KEY_ENCODED_EMAIL, null);
+                    spe.putString(Constants.KEY_PROVIDER, null);
+                    spe.putString(Constants.UserName, null);
+
+                   takeUserToLoginScreenOnUnAuth();
+                }
+                    });
         }
         return super.onOptionsItemSelected(item);
     }

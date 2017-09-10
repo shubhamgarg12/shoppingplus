@@ -3,6 +3,7 @@ package com.udacity.firebase.shoppinglistplusplus.ui.activeListDetails;
 import android.content.Intent;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -80,6 +81,7 @@ public class ActiveListDetailsActivity extends BaseActivity {
                  +                 * while current user is in the list details activity)
                  +                 */
                 ShoppingList shoppingList = snapshot.getValue(ShoppingList.class);
+                System.out.println("Shopping List" + shoppingList);
 
                 if (shoppingList == null) {
                     finish();
@@ -89,6 +91,7 @@ public class ActiveListDetailsActivity extends BaseActivity {
                      */
                     return;
                 }
+
                 mShoppingList = shoppingList;
 
                                         /* Calling invalidateOptionsMenu causes onCreateOptionsMenu to be called */
@@ -132,6 +135,7 @@ public class ActiveListDetailsActivity extends BaseActivity {
             }
         });
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

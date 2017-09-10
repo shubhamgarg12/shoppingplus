@@ -116,8 +116,10 @@ public class CreateAccountActivity extends BaseActivity {
                 if (task.isSuccessful()) {
                     mAuthProgressDialog.dismiss();
                     Log.i(LOG_TAG, getString(R.string.log_message_auth_successful));
+
                     String uid = task.getResult().getUser().getUid();
                     createUserInFirebaseHelper(uid);
+                    Toast.makeText(CreateAccountActivity.this,"Account Created",Toast.LENGTH_SHORT).show();
                 } else {
 
 

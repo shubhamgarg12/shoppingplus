@@ -45,7 +45,7 @@ public final class Constants {
 
     public static final String PASSWORD_PROVIDER = "password";
 
-    public static final String GOOGLE_PROVIDER = "google.com";
+    public static final String GOOGLE_PROVIDER = "google,com";
 
     public static final String FIREBASE_LOCATION_USERS = "users";
 
@@ -60,6 +60,8 @@ public final class Constants {
     public static final String FIREBASE_PROPERTY_EMAIL = "email";
 
     public static final String KEY_GOOGLE_EMAIL = "GOOGLE_EMAIL";
+
+    public static final String UserName = "userName";
     /**
      * Constants for Firebase object properties
      */

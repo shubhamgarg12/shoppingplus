@@ -27,6 +27,7 @@ import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.auth.UserInfo;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -150,6 +151,14 @@ public class LoginActivity extends BaseActivity {
     /**
      * Sign in with Password provider (used when user taps "Done" action on keyboard)
      */
+
+    private void match(Task task){
+
+        if(task.getResult().equals("")){
+
+
+        }
+    }
     public void signInPassword() {
 
         String email = mEditTextEmailInput.getText().toString();
@@ -170,79 +179,21 @@ public class LoginActivity extends BaseActivity {
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if(task.isSuccessful()){
+                    public void onComplete(@NonNull final Task<AuthResult> task) {
+                        if(task.isSuccessful()) {
                             mAuthProgressDialog.dismiss();
                             Log.i(LOG_TAG, " " + getString(R.string.log_message_auth_successful));
-                            String provider="Default";
+                            match(task);
+                            String provider = "Default";
                             SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                             SharedPreferences.Editor spe = sp.edit();
-                            if (task.getResult().getUser().getProviderId().equals(Constants.PASSWORD_PROVIDER)) {
-
-                                String unEmail= task.getResult().getUser().getEmail().toString().toLowerCase();
-                                mEncodedEmail = Utils.encodeEmail(unEmail);
-                                provider = "password";
-
-                            } else
-                            /**
-                             * If user has logged in with Password provider
-                             */
-                                if (task.getResult().getAdditionalUserInfo().getProviderId().equals(Constants.GOOGLE_PROVIDER)) {
-
-
-                                    SharedPreferences gp = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                                    SharedPreferences.Editor gpe = sp.edit();
-                                    provider="google";
-                                    String unprocessedEmail;
-                                    if (mGoogleApiClient.isConnected()) {
-                                        unprocessedEmail = mGoogleAccount.getEmail().toLowerCase();
-                                        spe.putString(Constants.KEY_GOOGLE_EMAIL, unprocessedEmail).apply();
-                                    } else {
-
-                                        /**
-                                         * Otherwise get email from sharedPreferences, use null as default value
-                                         * (this mean that user resumes his session)
-                                         */
-                                        unprocessedEmail = gp.getString(Constants.KEY_GOOGLE_EMAIL, null);
-                                    }
-                                    /**
-                                     * Encode user email replacing "." with "," to be able to use it
-                                     * as a Firebase db key
-                                     */
-                                    mEncodedEmail = Utils.encodeEmail(unprocessedEmail);
-
-                                    final String userName = mGoogleAccount.getDisplayName();
-
-                                                /* If no user exists, make a user */
-                                    final DatabaseReference userLocation = FirebaseDatabase.getInstance().getReferenceFromUrl(Constants.FIREBASE_URL_USERS).child(mEncodedEmail);
-                                    userLocation.addListenerForSingleValueEvent(new ValueEventListener() {
-                                        @Override
-                                        public void onDataChange(DataSnapshot dataSnapshot) {
-                                                   /* If nothing is there ...*/
-                                            if (dataSnapshot.getValue() == null) {
-                                                HashMap<String, Object> timestampJoined = new HashMap<>();
-                                                timestampJoined.put(Constants.FIREBASE_PROPERTY_TIMESTAMP, ServerValue.TIMESTAMP);
-
-                                                User newUser = new User(userName, mEncodedEmail, timestampJoined);
-                                                userLocation.setValue(newUser);
-                                            }
-                                        }
-
-                                        @Override
-                                        public void onCancelled(DatabaseError firebaseError) {
-                                            Log.d(LOG_TAG, getString(R.string.log_error_occurred) + firebaseError.getMessage());
-                                        }
-                                    });
-
-                                } else {
-                                    Log.e(LOG_TAG, getString(R.string.log_error_invalid_provider) + task.getResult().getUser().getProviderId());
-                                }
-
-                            spe.putString(Constants.KEY_PROVIDER,provider).apply();
+                            String unEmail = task.getResult().getUser().getEmail().toString().toLowerCase();
+                            mEncodedEmail = Utils.encodeEmail(unEmail);
+                            provider = "password";
+                            System.out.println("" + task.getResult().getUser().getDisplayName());
+                            spe.putString(Constants.KEY_PROVIDER, provider).apply();
                             spe.putString(Constants.KEY_ENCODED_EMAIL, mEncodedEmail).apply();
-
-
-
+                            spe.putString(Constants.UserName,task.getResult().getUser().getDisplayName()).apply();
                        /* Go to main activity */
                             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -254,35 +205,11 @@ public class LoginActivity extends BaseActivity {
                             Log.w(LOG_TAG,"signInWithEmail:failure", task.getException());
                             Toast.makeText(LoginActivity.this, "Authentication failed.",
                                     Toast.LENGTH_SHORT).show();
-
-
-
                         }
 
                     }
                 });
     }
-            /*
-             * Use utility method to check the network connection state
-             * Show "No network connection" if there is no connection
-             * Show Firebase specific error message otherwise
-
-            switch (firebaseError.getCode()) {
-                case FirebaseError.INVALID_EMAIL:
-                case FirebaseError.USER_DOES_NOT_EXIST:
-                    mEditTextEmailInput.setError(getString(R.string.error_message_email_issue));
-                    break;
-                case FirebaseError.INVALID_PASSWORD:
-                    mEditTextPasswordInput.setError(firebaseError.getMessage());
-                    break;
-                case FirebaseError.NETWORK_ERROR:
-                    showErrorToast(getString(R.string.error_message_failed_sign_in_no_network));
-                    break;
-                default:
-                    showErrorToast(firebaseError.toString());
-            }
-        }
-    }*/
 
     /*
      * Helper method that makes sure a user is created if the user
@@ -393,8 +320,10 @@ public class LoginActivity extends BaseActivity {
             } else {
                 showErrorToast("Error handling the sign in: " + result.getStatus().getStatusMessage());
             }
-            mAuthProgressDialog.dismiss();
+
         }
+        mAuthProgressDialog.dismiss();
+
     }
 
     /**
@@ -413,9 +342,46 @@ public class LoginActivity extends BaseActivity {
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(LOG_TAG, "signInWithCredential:success");
-                            // FirebaseUser user = mAuth.getCurrentUser();
-                            //updateUI(user);
-                        } else {
+                            String provider = "" ;
+
+                            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                            SharedPreferences.Editor spe = sp.edit();
+                            provider = "google";
+
+                            String unprocessedEmail;
+                            if (mGoogleApiClient.isConnected()) {
+                                unprocessedEmail = mGoogleAccount.getEmail().toLowerCase();
+                                spe.putString(Constants.KEY_GOOGLE_EMAIL, unprocessedEmail).apply();
+                            } else {
+
+                                /**
+                                 * Otherwise get email from sharedPreferences, use null as default value
+                                 * (this mean that user resumes his session)
+                                 */
+                                unprocessedEmail = sp.getString(Constants.KEY_GOOGLE_EMAIL, null);
+                            }
+                            /**
+                             * Encode user email replacing "." with "," to be able to use it
+                             * as a Firebase db key
+                             */
+                            mEncodedEmail = Utils.encodeEmail(unprocessedEmail);
+
+                            final String userName = mGoogleAccount.getDisplayName();
+
+                                                /* If no user exists, make a user */
+
+
+                            spe.putString(Constants.KEY_PROVIDER, provider).apply();
+                            spe.putString(Constants.KEY_ENCODED_EMAIL, mEncodedEmail).apply();
+                            spe.putString(Constants.UserName,userName).apply();
+                            /* Go to main activity */
+                            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            startActivity(intent);
+                            finish();
+                        }
+                        else{
+                            mAuthProgressDialog.dismiss();
                             // If sign in fails, display a message to the user.
                             // Log.w(TAG, "signInWithCredential:failure", task.getException());
                             Toast.makeText(LoginActivity.this, "Authentication failed.",
