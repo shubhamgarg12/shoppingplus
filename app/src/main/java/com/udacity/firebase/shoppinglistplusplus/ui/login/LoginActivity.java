@@ -97,7 +97,27 @@ public class LoginActivity extends BaseActivity {
 
     @Override
     protected void onResume() {
+
         super.onResume();
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor spe = sp.edit();
+
+        /**
+         * Get the newly registered user email if present, use null as default value
+         */
+        String signupEmail = sp.getString(Constants.KEY_SIGNUP_EMAIL, null);
+
+        /**
+         * Fill in the email editText and remove value from SharedPreferences if email is present
+         */
+        if (signupEmail != null) {
+            mEditTextEmailInput.setText(signupEmail);
+
+            /**
+             * Clear signupEmail sharedPreferences to make sure that they are used just once
+             */
+            spe.putString(Constants.KEY_SIGNUP_EMAIL, null).apply();
+        }
     }
 
     @Override
@@ -162,7 +182,7 @@ public class LoginActivity extends BaseActivity {
     public void signInPassword() {
 
         String email = mEditTextEmailInput.getText().toString();
-        String password = mEditTextPasswordInput.getText().toString();
+        final String password = mEditTextPasswordInput.getText().toString();
 
         if (email.equals("")) {
             mEditTextEmailInput.setError(getString(R.string.error_cannot_be_empty));
@@ -183,7 +203,7 @@ public class LoginActivity extends BaseActivity {
                         if(task.isSuccessful()) {
                             mAuthProgressDialog.dismiss();
                             Log.i(LOG_TAG, " " + getString(R.string.log_message_auth_successful));
-                            match(task);
+
                             String provider = "Default";
                             SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                             SharedPreferences.Editor spe = sp.edit();
@@ -194,6 +214,20 @@ public class LoginActivity extends BaseActivity {
                             spe.putString(Constants.KEY_PROVIDER, provider).apply();
                             spe.putString(Constants.KEY_ENCODED_EMAIL, mEncodedEmail).apply();
                             spe.putString(Constants.UserName,task.getResult().getUser().getDisplayName()).apply();
+
+                            /* Change Password */
+                            mAuth.confirmPasswordReset(password,password).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if(task.isSuccessful())
+                                    Log.w(LOG_TAG,"password change");
+                                    else
+                                        Log.w(LOG_TAG,"Password doesnot change", task.getException());
+
+
+                                }
+                            });
+
                        /* Go to main activity */
                             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
